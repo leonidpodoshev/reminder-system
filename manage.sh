@@ -2,7 +2,7 @@
 
 # Memo System Management Script
 
-COMPOSE_FILE="docker compose.prod.yml"
+COMPOSE_FILE="docker-compose.prod.yml"
 ENV_FILE=".env.prod"
 
 case "$1" in
