@@ -1,0 +1,39 @@
+
+# ===================================
+# API Gateway .gitignore
+# Save as: api-gateway/.gitignore
+# ===================================
+
+# SSL certificates (don't commit real certificates)
+ssl/*.crt
+ssl/*.key
+ssl/*.pem
+ssl/*.csr
+!ssl/.gitkeep
+
+# Nginx logs
+logs/
+*.log
+access.log
+error.log
+
+# Nginx cache
+cache/
+proxy_cache/
+fastcgi_cache/
+
+# Temporary files
+tmp/
+*.tmp
+
+# Backup files
+*.bak
+*.backup
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/

@@ -1,0 +1,18 @@
+
+# ===================================
+# Scripts Directory .gitignore
+# Save as: scripts/.gitignore
+# ===================================
+
+# Backup files
+*.sql
+*.dump
+*.tar.gz
+
+# Temporary files
+*.tmp
+tmp/
+
+# OS files
+.DS_Store
+Thumbs.db

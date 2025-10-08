@@ -1,0 +1,24 @@
+# ===================================
+# Monitoring Directory .gitignore
+# Save as: monitoring/.gitignore
+# ===================================
+
+# Grafana
+grafana/data/
+grafana/*.db
+
+# Prometheus
+prometheus/data/
+
+# Alert manager
+alertmanager/data/
+
+# Temporary files
+*.tmp
+tmp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+

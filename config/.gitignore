@@ -1,0 +1,20 @@
+
+# ===================================
+# Config Directory .gitignore
+# Save as: config/.gitignore
+# ===================================
+
+# Actual configuration files with secrets
+*.production.conf
+*.production.yml
+*-production.conf
+*-production.yml
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# OS files
+.DS_Store
+Thumbs.db
