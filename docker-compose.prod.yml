@@ -329,12 +329,16 @@ networks:
 # ===================================
 volumes:
   postgres_data:
-    driver: local
+    external: true
+    name: reminder-system_postgres_data
   rabbitmq_data:
-    driver: local
+    external: true  
+    name: reminder-system_rabbitmq_data
   rabbitmq_logs:
-    driver: local
+    external: true
+    name: reminder-system_rabbitmq_logs
   redis_data:
-    driver: local
+    external: true
+    name: reminder-system_redis_data
   api_gateway_logs:
     driver: local

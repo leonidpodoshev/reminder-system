@@ -18,18 +18,18 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ Docker Compose is not installed. Please install Docker Compose first."
+if ! docker compose version &> /dev/null; then
+    echo "❌ Docker Compose V2 is not installed. Please install Docker Compose V2 first."
     exit 1
 fi
 
 # Stop any existing containers
 echo "🛑 Stopping existing containers..."
-docker-compose -f docker-compose.prod.yml --env-file .env.prod down || true
+docker compose -f docker-compose.prod.yml --env-file .env.prod down || true
 
 # Build and start the production system
 echo "🔨 Building and starting Memo system..."
-docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
 # Wait for services to be healthy
 echo "⏳ Waiting for services to be ready..."
@@ -37,7 +37,7 @@ sleep 30
 
 # Check service health
 echo "🔍 Checking service health..."
-docker-compose -f docker-compose.prod.yml --env-file .env.prod ps
+docker compose -f docker-compose.prod.yml --env-file .env.prod ps
 
 # Test the API
 echo "🧪 Testing API connectivity..."
@@ -60,6 +60,6 @@ echo "   - Frontend: http://memo:3000"
 echo "   - API: http://memo"
 echo ""
 echo "3. Monitor logs:"
-echo "   docker-compose -f docker-compose.prod.yml logs -f"
+echo "   docker compose -f docker-compose.prod.yml logs -f"
 echo ""
 echo "4. Update passwords in .env.prod for production security!"

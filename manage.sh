@@ -33,7 +33,7 @@ case "$1" in
         ;;
     backup)
         echo "💾 Creating database backup..."
-        docker exec memo-postgres pg_dump -U memo_user memo_db > "memo_backup_$(date +%Y%m%d_%H%M%S).sql"
+        docker exec memo-postgres pg_dump -U reminder reminder_db > "memo_backup_$(date +%Y%m%d_%H%M%S).sql"
         echo "✅ Backup created: memo_backup_$(date +%Y%m%d_%H%M%S).sql"
         ;;
     *)

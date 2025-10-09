@@ -15,10 +15,12 @@
    sudo usermod -aG docker $USER
    ```
 
-3. **Install Docker Compose:**
+3. **Install Docker Compose V2:**
    ```bash
-   sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-   sudo chmod +x /usr/local/bin/docker-compose
+   # Docker Compose V2 is included with Docker Desktop
+   # For Ubuntu Server, it's included with recent Docker installations
+   # Verify installation:
+   docker compose version
    ```
 
 4. **Reboot to apply Docker group changes:**
@@ -168,7 +170,7 @@ docker exec -i memo-postgres psql -U memo_user -d memo_db < memo_backup_YYYYMMDD
 ./manage.sh logs
 
 # Restart specific service
-docker-compose -f docker-compose.prod.yml restart memo-reminder-service
+docker compose -f docker-compose.prod.yml restart memo-reminder-service
 ```
 
 ### Can't access via http://memo
