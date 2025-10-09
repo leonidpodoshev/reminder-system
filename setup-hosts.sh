@@ -84,5 +84,5 @@ fi
 
 echo ""
 echo "🎉 Setup complete! You should now be able to access:"
-echo "   - Memo System: http://memo:3000"
+echo "   - Memo System: http://memo:3001"
 echo "   - API: http://memo:8080"
