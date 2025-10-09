@@ -282,13 +282,13 @@ services:
         max-file: "3"
 
   # ===================================
-  # API Gateway (Nginx) - Port 8080
+  # API Gateway (Nginx) - Port 8090
   # ===================================
   api-gateway:
     image: nginx:1.25-alpine
     container_name: memo-api-gateway
     ports:
-      - "8080:80" # Using 8080 to avoid conflicts
+      - "8090:80" # Changed to 8090 to avoid docbox conflicts
     volumes:
       - ./api-gateway/nginx-fixed.conf:/etc/nginx/nginx.conf:ro
       - ./api-gateway/html/index.html:/usr/share/nginx/html/index.html:ro
@@ -330,10 +330,10 @@ services:
       dockerfile: Dockerfile
       args:
         NODE_VERSION: 18
-        REACT_APP_API_URL: http://memo:8080 # Updated for production
+        REACT_APP_API_URL: http://memo:8090 # Updated for production
     container_name: memo-frontend
     environment:
-      REACT_APP_API_URL: http://memo:8080
+      REACT_APP_API_URL: http://memo:8090
       REACT_APP_VERSION: ${APP_VERSION:-1.0.0}
     ports:
       - "3001:80" # Changed to 3001 to avoid port conflict
