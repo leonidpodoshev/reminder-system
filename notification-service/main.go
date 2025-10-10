@@ -12,6 +12,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,7 @@ type EmailConfig struct {
 	Username string
 	Password string
 	From     string
+	TLS      bool
 }
 
 // SMS configuration (Twilio)
@@ -47,10 +49,12 @@ type SMSConfig struct {
 }
 
 var (
-	emailConfig EmailConfig
-	smsConfig   SMSConfig
-	rabbitConn  *amqp.Connection
-	rabbitCh    *amqp.Channel
+	emailConfig    EmailConfig
+	smsConfig      SMSConfig
+	rabbitConn     *amqp.Connection
+	rabbitCh       *amqp.Channel
+	emailRateLimit = make(chan struct{}, 1) // Rate limit for Gmail
+	emailMutex     sync.Mutex
 )
 
 func main() {
@@ -98,6 +102,7 @@ func loadConfigs() {
 		Username: getEnv("SMTP_USERNAME", ""),
 		Password: getEnv("SMTP_PASSWORD", ""),
 		From:     getEnv("SMTP_FROM", "noreply@reminder.local"),
+		TLS:      getEnv("SMTP_TLS", "true") == "true",
 	}
 
 	// SMS config (Twilio)
@@ -225,9 +230,10 @@ func sendEmail(req NotificationRequest) error {
 	successCount := 0
 
 	for i, recipient := range emailAddresses {
-		// Add delay between emails to avoid rate limiting (except for first email)
+		// Add significant delay between emails to avoid Gmail rate limiting
 		if i > 0 {
-			time.Sleep(2 * time.Second)
+			log.Printf("Waiting 30 seconds before sending to next recipient...")
+			time.Sleep(30 * time.Second)
 		}
 
 		// Email headers for individual recipient
@@ -251,7 +257,25 @@ func sendEmail(req NotificationRequest) error {
 		err = smtp.SendMail(addr, auth, emailConfig.From, []string{recipient}, message.Bytes())
 		if err != nil {
 			log.Printf("Failed to send email to %s: %v", recipient, err)
-			failedRecipients = append(failedRecipients, recipient)
+
+			// Check if it's a rate limiting error
+			if strings.Contains(err.Error(), "Too many login attempts") || strings.Contains(err.Error(), "454 4.7.0") {
+				log.Printf("Gmail rate limiting detected. Waiting 2 minutes before continuing...")
+				time.Sleep(2 * time.Minute)
+
+				// Retry this recipient once more
+				log.Printf("Retrying email to %s after rate limit delay...", recipient)
+				err = smtp.SendMail(addr, auth, emailConfig.From, []string{recipient}, message.Bytes())
+				if err != nil {
+					log.Printf("Retry also failed for %s: %v", recipient, err)
+					failedRecipients = append(failedRecipients, recipient)
+				} else {
+					log.Printf("Email sent successfully to %s after retry", recipient)
+					successCount++
+				}
+			} else {
+				failedRecipients = append(failedRecipients, recipient)
+			}
 		} else {
 			log.Printf("Email sent successfully to: %s", recipient)
 			successCount++
