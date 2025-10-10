@@ -168,15 +168,32 @@ func consumeNotifications() {
 		log.Printf("Processing notification: %s (%s)", req.ReminderID, req.NotificationType)
 
 		var err error
-		if req.NotificationType == "email" {
-			err = sendEmail(req)
-		} else if req.NotificationType == "sms" {
-			err = sendSMS(req)
+		maxRetries := 3
+
+		for attempt := 1; attempt <= maxRetries; attempt++ {
+			if req.NotificationType == "email" {
+				err = sendEmail(req)
+			} else if req.NotificationType == "sms" {
+				err = sendSMS(req)
+			}
+
+			if err == nil {
+				break // Success, exit retry loop
+			}
+
+			log.Printf("Attempt %d/%d failed for notification %s: %v", attempt, maxRetries, req.ReminderID, err)
+
+			if attempt < maxRetries {
+				// Wait before retrying, with exponential backoff
+				waitTime := time.Duration(attempt*attempt) * 5 * time.Second
+				log.Printf("Waiting %v before retry...", waitTime)
+				time.Sleep(waitTime)
+			}
 		}
 
 		if err != nil {
-			log.Printf("Error sending notification: %v", err)
-			msg.Nack(false, true) // Requeue on failure
+			log.Printf("Failed to send notification after %d attempts: %v", maxRetries, err)
+			msg.Nack(false, false) // Don't requeue after max retries to avoid infinite loop
 		} else {
 			log.Printf("Notification sent successfully: %s", req.ReminderID)
 			msg.Ack(false)
@@ -191,39 +208,67 @@ func sendEmail(req NotificationRequest) error {
 		return fmt.Errorf("no valid email addresses found")
 	}
 
+	log.Printf("Sending email to %d recipients: %s", len(emailAddresses), strings.Join(emailAddresses, ", "))
+
 	// Create email body from template
 	emailBody, err := generateEmailBody(req)
 	if err != nil {
 		return fmt.Errorf("failed to generate email body: %w", err)
 	}
 
-	// Email headers
-	subject := fmt.Sprintf("Reminder: %s", req.Title)
-	headers := make(map[string]string)
-	headers["From"] = emailConfig.From
-	headers["To"] = strings.Join(emailAddresses, ", ") // Multiple recipients in To header
-	headers["Subject"] = subject
-	headers["MIME-Version"] = "1.0"
-	headers["Content-Type"] = "text/html; charset=UTF-8"
-
-	// Build message
-	var message bytes.Buffer
-	for k, v := range headers {
-		message.WriteString(fmt.Sprintf("%s: %s\r\n", k, v))
-	}
-	message.WriteString("\r\n")
-	message.WriteString(emailBody)
-
-	// Send email via SMTP to all recipients
+	// Send to each recipient individually to avoid Gmail rate limits
+	// Use a single SMTP connection with delays between sends
 	auth := smtp.PlainAuth("", emailConfig.Username, emailConfig.Password, emailConfig.Host)
 	addr := fmt.Sprintf("%s:%s", emailConfig.Host, emailConfig.Port)
 
-	err = smtp.SendMail(addr, auth, emailConfig.From, emailAddresses, message.Bytes())
-	if err != nil {
-		return fmt.Errorf("failed to send email to %d recipients: %w", len(emailAddresses), err)
+	var failedRecipients []string
+	successCount := 0
+
+	for i, recipient := range emailAddresses {
+		// Add delay between emails to avoid rate limiting (except for first email)
+		if i > 0 {
+			time.Sleep(2 * time.Second)
+		}
+
+		// Email headers for individual recipient
+		subject := fmt.Sprintf("Reminder: %s", req.Title)
+		headers := make(map[string]string)
+		headers["From"] = emailConfig.From
+		headers["To"] = recipient
+		headers["Subject"] = subject
+		headers["MIME-Version"] = "1.0"
+		headers["Content-Type"] = "text/html; charset=UTF-8"
+
+		// Build message for this recipient
+		var message bytes.Buffer
+		for k, v := range headers {
+			message.WriteString(fmt.Sprintf("%s: %s\r\n", k, v))
+		}
+		message.WriteString("\r\n")
+		message.WriteString(emailBody)
+
+		// Send email to this recipient
+		err = smtp.SendMail(addr, auth, emailConfig.From, []string{recipient}, message.Bytes())
+		if err != nil {
+			log.Printf("Failed to send email to %s: %v", recipient, err)
+			failedRecipients = append(failedRecipients, recipient)
+		} else {
+			log.Printf("Email sent successfully to: %s", recipient)
+			successCount++
+		}
 	}
 
-	log.Printf("Email sent successfully to %d recipients: %s", len(emailAddresses), strings.Join(emailAddresses, ", "))
+	// Report results
+	if len(failedRecipients) > 0 {
+		if successCount == 0 {
+			return fmt.Errorf("failed to send email to all %d recipients. Last error: %v", len(emailAddresses), err)
+		} else {
+			log.Printf("Partial success: %d/%d emails sent. Failed recipients: %s",
+				successCount, len(emailAddresses), strings.Join(failedRecipients, ", "))
+		}
+	}
+
+	log.Printf("Email delivery complete: %d/%d successful", successCount, len(emailAddresses))
 	return nil
 }
 
