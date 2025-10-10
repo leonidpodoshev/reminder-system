@@ -253,32 +253,33 @@ func sendEmail(req NotificationRequest) error {
 		message.WriteString("\r\n")
 		message.WriteString(emailBody)
 
-		// Send email to this recipient
-		err = smtp.SendMail(addr, auth, emailConfig.From, []string{recipient}, message.Bytes())
-		if err != nil {
-			log.Printf("Failed to send email to %s: %v", recipient, err)
+		// Send email to this recipient with limited retry logic
+		maxRateLimitRetries := 2
+		sent := false
 
-			// Check if it's a rate limiting error
-			if strings.Contains(err.Error(), "Too many login attempts") || strings.Contains(err.Error(), "454 4.7.0") {
-				log.Printf("Gmail rate limiting detected. Waiting 2 minutes before continuing...")
-				time.Sleep(2 * time.Minute)
+		for attempt := 0; attempt <= maxRateLimitRetries && !sent; attempt++ {
+			err = smtp.SendMail(addr, auth, emailConfig.From, []string{recipient}, message.Bytes())
 
-				// Retry this recipient once more
-				log.Printf("Retrying email to %s after rate limit delay...", recipient)
-				err = smtp.SendMail(addr, auth, emailConfig.From, []string{recipient}, message.Bytes())
-				if err != nil {
-					log.Printf("Retry also failed for %s: %v", recipient, err)
-					failedRecipients = append(failedRecipients, recipient)
+			if err == nil {
+				log.Printf("Email sent successfully to: %s", recipient)
+				successCount++
+				sent = true
+			} else if strings.Contains(err.Error(), "Too many login attempts") || strings.Contains(err.Error(), "454 4.7.0") {
+				if attempt < maxRateLimitRetries {
+					waitTime := time.Duration(attempt+1) * 2 * time.Minute // 2min, 4min
+					log.Printf("Gmail rate limiting detected (attempt %d/%d). Waiting %v before retrying %s...",
+						attempt+1, maxRateLimitRetries+1, waitTime, recipient)
+					time.Sleep(waitTime)
 				} else {
-					log.Printf("Email sent successfully to %s after retry", recipient)
-					successCount++
+					log.Printf("Max rate limit retries reached for %s: %v", recipient, err)
+					failedRecipients = append(failedRecipients, recipient)
 				}
 			} else {
+				// Non-rate-limit error, don't retry
+				log.Printf("Failed to send email to %s: %v", recipient, err)
 				failedRecipients = append(failedRecipients, recipient)
+				break
 			}
-		} else {
-			log.Printf("Email sent successfully to: %s", recipient)
-			successCount++
 		}
 	}
 
