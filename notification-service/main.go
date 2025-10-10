@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -183,6 +185,12 @@ func consumeNotifications() {
 }
 
 func sendEmail(req NotificationRequest) error {
+	// Parse multiple email addresses
+	emailAddresses := parseEmailAddresses(req.Email)
+	if len(emailAddresses) == 0 {
+		return fmt.Errorf("no valid email addresses found")
+	}
+
 	// Create email body from template
 	emailBody, err := generateEmailBody(req)
 	if err != nil {
@@ -193,7 +201,7 @@ func sendEmail(req NotificationRequest) error {
 	subject := fmt.Sprintf("Reminder: %s", req.Title)
 	headers := make(map[string]string)
 	headers["From"] = emailConfig.From
-	headers["To"] = req.Email
+	headers["To"] = strings.Join(emailAddresses, ", ") // Multiple recipients in To header
 	headers["Subject"] = subject
 	headers["MIME-Version"] = "1.0"
 	headers["Content-Type"] = "text/html; charset=UTF-8"
@@ -206,15 +214,16 @@ func sendEmail(req NotificationRequest) error {
 	message.WriteString("\r\n")
 	message.WriteString(emailBody)
 
-	// Send email via SMTP
+	// Send email via SMTP to all recipients
 	auth := smtp.PlainAuth("", emailConfig.Username, emailConfig.Password, emailConfig.Host)
 	addr := fmt.Sprintf("%s:%s", emailConfig.Host, emailConfig.Port)
 
-	err = smtp.SendMail(addr, auth, emailConfig.From, []string{req.Email}, message.Bytes())
+	err = smtp.SendMail(addr, auth, emailConfig.From, emailAddresses, message.Bytes())
 	if err != nil {
-		return fmt.Errorf("failed to send email: %w", err)
+		return fmt.Errorf("failed to send email to %d recipients: %w", len(emailAddresses), err)
 	}
 
+	log.Printf("Email sent successfully to %d recipients: %s", len(emailAddresses), strings.Join(emailAddresses, ", "))
 	return nil
 }
 
@@ -294,9 +303,9 @@ func generateEmailBody(req NotificationRequest) (string, error) {
 	}
 
 	data := struct {
-		Title              string
-		Description        string
-		DateTimeFormatted  string
+		Title             string
+		Description       string
+		DateTimeFormatted string
 	}{
 		Title:             req.Title,
 		Description:       req.Description,
@@ -348,6 +357,30 @@ func healthCheck(c *gin.Context) {
 		"service": "notification-service",
 		"time":    time.Now(),
 	})
+}
+
+func parseEmailAddresses(emailString string) []string {
+	if emailString == "" {
+		return []string{}
+	}
+
+	// Split by comma or semicolon
+	emails := strings.FieldsFunc(emailString, func(c rune) bool {
+		return c == ',' || c == ';'
+	})
+
+	// Clean up and validate each email
+	var validEmails []string
+	emailRegex := regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
+
+	for _, email := range emails {
+		email = strings.TrimSpace(email)
+		if email != "" && emailRegex.MatchString(email) {
+			validEmails = append(validEmails, email)
+		}
+	}
+
+	return validEmails
 }
 
 func getEnv(key, defaultValue string) string {

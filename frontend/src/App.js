@@ -4,6 +4,53 @@ import { Plus, Bell, Mail, MessageSquare, Trash2, Edit2, Check, X, Calendar } fr
 
 const API_BASE = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_URL}/api` : '/api';
 
+// Email validation and parsing utilities
+const parseEmails = (emailString) => {
+  if (!emailString) return [];
+  
+  // Split by comma or semicolon, then clean up
+  return emailString
+    .split(/[,;]/)
+    .map(email => email.trim())
+    .filter(email => email.length > 0);
+};
+
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const EmailPreview = ({ emails }) => {
+  const emailList = parseEmails(emails);
+  
+  if (emailList.length === 0) return null;
+  
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-medium text-gray-600">
+        Recipients ({emailList.length}):
+      </p>
+      <div className="flex flex-wrap gap-1">
+        {emailList.map((email, index) => {
+          const isValid = validateEmail(email);
+          return (
+            <span
+              key={index}
+              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                isValid
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
+              {isValid ? '✓' : '✗'} {email}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const ReminderApp = () => {
   const [reminders, setReminders] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -42,6 +89,38 @@ const ReminderApp = () => {
 
   const handleSubmit = async () => {
     try {
+      // Validate form data
+      if (!formData.title.trim()) {
+        alert('Please enter a title for your reminder');
+        return;
+      }
+      
+      if (!formData.datetime) {
+        alert('Please select a date and time for your reminder');
+        return;
+      }
+      
+      // Validate email addresses if email notification is selected
+      if (formData.notificationType === 'email') {
+        const emailList = parseEmails(formData.email);
+        if (emailList.length === 0) {
+          alert('Please enter at least one email address');
+          return;
+        }
+        
+        const invalidEmails = emailList.filter(email => !validateEmail(email));
+        if (invalidEmails.length > 0) {
+          alert(`Please fix these invalid email addresses:\n${invalidEmails.join('\n')}`);
+          return;
+        }
+      }
+      
+      // Validate phone number if SMS notification is selected
+      if (formData.notificationType === 'sms' && !formData.phone.trim()) {
+        alert('Please enter a phone number for SMS notifications');
+        return;
+      }
+      
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId ? `${API_BASE}/reminders/${editingId}` : `${API_BASE}/reminders`;
       
@@ -54,7 +133,7 @@ const ReminderApp = () => {
         description: formData.description,
         datetime: datetimeRFC3339,
         notification_type: formData.notificationType, // Convert camelCase to snake_case
-        email: formData.email,
+        email: formData.email, // Backend will handle parsing multiple emails
         phone: formData.phone
       };
 
@@ -222,8 +301,18 @@ const ReminderApp = () => {
               </div>
 
               {reminder.email && (
-                <div className="text-sm text-gray-500 mb-4 truncate">
-                  To: {reminder.email}
+                <div className="text-sm text-gray-500 mb-4">
+                  <div className="font-medium mb-1">Recipients:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {parseEmails(reminder.email).map((email, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                      >
+                        {email}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
               
@@ -333,15 +422,23 @@ const ReminderApp = () => {
               {formData.notificationType === 'email' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
+                    Email Addresses
                   </label>
-                  <input
-                    type="email"
+                  <textarea
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="user@example.com"
+                    rows="3"
+                    placeholder="user1@example.com, user2@example.com&#10;Or separate with semicolons: user3@example.com; user4@example.com"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Separate multiple email addresses with commas (,) or semicolons (;)
+                  </p>
+                  {formData.email && (
+                    <div className="mt-2">
+                      <EmailPreview emails={formData.email} />
+                    </div>
+                  )}
                 </div>
               )}
 
