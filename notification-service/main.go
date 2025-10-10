@@ -170,7 +170,14 @@ func consumeNotifications() {
 			continue
 		}
 
-		log.Printf("Processing notification: %s (%s)", req.ReminderID, req.NotificationType)
+		log.Printf("Processing notification: %s (%s) scheduled for: %s", req.ReminderID, req.NotificationType, req.DateTime.Format("2006-01-02 15:04:05"))
+
+		// Check if this notification is for a future reminder (shouldn't be sent yet)
+		if req.DateTime.After(time.Now()) {
+			log.Printf("Notification %s is for future time %s, discarding (should not have been queued)", req.ReminderID, req.DateTime.Format("2006-01-02 15:04:05"))
+			msg.Ack(false) // Acknowledge to remove from queue
+			continue
+		}
 
 		var err error
 		maxRetries := 3
@@ -198,7 +205,14 @@ func consumeNotifications() {
 
 		if err != nil {
 			log.Printf("Failed to send notification after %d attempts: %v", maxRetries, err)
-			msg.Nack(false, false) // Don't requeue after max retries to avoid infinite loop
+
+			// Check if it's a Gmail rate limiting error - don't requeue these
+			if strings.Contains(err.Error(), "Too many login attempts") || strings.Contains(err.Error(), "454 4.7.0") {
+				log.Printf("Gmail rate limiting detected, discarding message %s to prevent infinite loop", req.ReminderID)
+				msg.Ack(false) // Acknowledge to remove from queue
+			} else {
+				msg.Nack(false, false) // Don't requeue after max retries to avoid infinite loop
+			}
 		} else {
 			log.Printf("Notification sent successfully: %s", req.ReminderID)
 			msg.Ack(false)
