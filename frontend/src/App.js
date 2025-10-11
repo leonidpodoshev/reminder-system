@@ -1,8 +1,27 @@
 // frontend/src/App.js
 import React, { useState, useEffect } from 'react';
-import { Plus, Bell, Mail, MessageSquare, Trash2, Edit2, Check, X, Calendar } from 'lucide-react';
+import { Plus, Bell, Mail, MessageSquare, Trash2, Edit2, Check, X, Calendar, Settings } from 'lucide-react';
 
 const API_BASE = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_URL}/api` : '/api';
+
+// Default email settings utilities
+const getDefaultEmails = () => {
+  try {
+    const stored = localStorage.getItem('memo-default-emails');
+    return stored || '';
+  } catch (error) {
+    console.error('Error loading default emails:', error);
+    return '';
+  }
+};
+
+const setDefaultEmails = (emails) => {
+  try {
+    localStorage.setItem('memo-default-emails', emails);
+  } catch (error) {
+    console.error('Error saving default emails:', error);
+  }
+};
 
 // Email validation and parsing utilities
 const parseEmails = (emailString) => {
@@ -54,8 +73,10 @@ const EmailPreview = ({ emails }) => {
 const ReminderApp = () => {
   const [reminders, setReminders] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [defaultEmails, setDefaultEmailsState] = useState(getDefaultEmails());
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -194,11 +215,17 @@ const ReminderApp = () => {
       description: '',
       datetime: '',
       notificationType: 'email',
-      email: '',
+      email: defaultEmails, // Auto-populate with default emails
       phone: ''
     });
     setEditingId(null);
     setShowModal(false);
+  };
+
+  const saveDefaultEmails = (emails) => {
+    setDefaultEmails(emails);
+    setDefaultEmailsState(emails);
+    setShowSettings(false);
   };
 
   const filteredReminders = reminders.filter(r => {
@@ -229,13 +256,22 @@ const ReminderApp = () => {
               <Bell className="w-8 h-8 text-indigo-600" />
               <h1 className="text-3xl font-bold text-gray-900">Reminder System</h1>
             </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>New Reminder</span>
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                title="Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span>New Reminder</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -470,6 +506,61 @@ const ReminderApp = () => {
                 >
                   <Check className="w-5 h-5" />
                   <span>{editingId ? 'Update' : 'Create'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Default Email Addresses
+                </label>
+                <textarea
+                  value={defaultEmails}
+                  onChange={(e) => setDefaultEmailsState(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  rows="3"
+                  placeholder="user1@example.com, user2@example.com&#10;Or separate with semicolons: user3@example.com; user4@example.com"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 These email addresses will be automatically filled when creating new reminders. You can still edit them for each reminder.
+                </p>
+                {defaultEmails && (
+                  <div className="mt-2">
+                    <EmailPreview emails={defaultEmails} />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => saveDefaultEmails(defaultEmails)}
+                  className="flex-1 flex items-center justify-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  <Check className="w-5 h-5" />
+                  <span>Save</span>
                 </button>
               </div>
             </div>
