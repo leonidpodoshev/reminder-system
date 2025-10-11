@@ -77,7 +77,7 @@ const ReminderApp = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [filter, setFilter] = useState('all');
-  const [defaultEmails, setDefaultEmailsState] = useState('');
+  const [defaultEmails, setDefaultEmailsState] = useState(getDefaultEmails());
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -259,10 +259,11 @@ const ReminderApp = () => {
             </div>
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => alert('Settings clicked!')}
-                className="bg-red-500 text-white px-2 py-1 rounded"
+                onClick={() => setShowSettings(true)}
+                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                title="Settings"
               >
-                TEST ⚙️
+                <Settings className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setShowModal(true)}
