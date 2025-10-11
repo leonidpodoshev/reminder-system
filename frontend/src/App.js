@@ -71,6 +71,7 @@ const EmailPreview = ({ emails }) => {
 };
 
 const ReminderApp = () => {
+  console.log('ReminderApp component is rendering!');
   const [reminders, setReminders] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
