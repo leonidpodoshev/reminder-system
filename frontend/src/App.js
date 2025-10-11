@@ -258,11 +258,11 @@ const ReminderApp = () => {
             </div>
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => setShowSettings(true)}
+                onClick={() => alert('Settings clicked!')}
                 className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
                 title="Settings"
               >
-                <Settings className="w-5 h-5" />
+                ⚙️
               </button>
               <button
                 onClick={() => setShowModal(true)}
