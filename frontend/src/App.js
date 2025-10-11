@@ -76,7 +76,7 @@ const ReminderApp = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [filter, setFilter] = useState('all');
-  const [defaultEmails, setDefaultEmailsState] = useState(getDefaultEmails());
+  const [defaultEmails, setDefaultEmailsState] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
