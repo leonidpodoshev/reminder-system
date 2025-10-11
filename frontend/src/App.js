@@ -255,23 +255,20 @@ const ReminderApp = () => {
             <div className="flex items-center space-x-3">
               <Bell className="w-8 h-8 text-indigo-600" />
               <h1 className="text-3xl font-bold text-gray-900">Reminder System</h1>
-            </div>
-            <div className="flex items-center space-x-3">
               <button
                 onClick={() => alert('Settings clicked!')}
-                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-                title="Settings"
+                className="bg-red-500 text-white px-2 py-1 rounded"
               >
-                ⚙️
-              </button>
-              <button
-                onClick={() => setShowModal(true)}
-                className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span>New Reminder</span>
+                TEST ⚙️
               </button>
             </div>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              <span>New Reminder</span>
+            </button>
           </div>
         </div>
       </header>
