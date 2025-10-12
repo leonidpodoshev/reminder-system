@@ -1,6 +1,6 @@
 // frontend/src/App.js
 import React, { useState, useEffect } from 'react';
-import { Plus, Bell, Mail, MessageSquare, Trash2, Edit2, Check, X, Calendar, Settings } from 'lucide-react';
+import { Plus, Bell, Mail, MessageSquare, Trash2, Edit2, Check, X, Calendar, Settings, CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 
 const API_BASE = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_URL}/api` : '/api';
 
@@ -67,6 +67,61 @@ const EmailPreview = ({ emails }) => {
         })}
       </div>
     </div>
+  );
+};
+
+const StatusBadge = ({ status }) => {
+  const getStatusConfig = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'sent':
+        return {
+          icon: CheckCircle,
+          text: 'Sent',
+          className: 'bg-green-100 text-green-800',
+          description: 'Notification delivered successfully'
+        };
+      case 'pending':
+        return {
+          icon: Clock,
+          text: 'Pending',
+          className: 'bg-yellow-100 text-yellow-800',
+          description: 'Waiting to be sent'
+        };
+      case 'processing':
+        return {
+          icon: Clock,
+          text: 'Sending',
+          className: 'bg-blue-100 text-blue-800',
+          description: 'Currently being sent'
+        };
+      case 'failed':
+        return {
+          icon: XCircle,
+          text: 'Failed',
+          className: 'bg-red-100 text-red-800',
+          description: 'Failed to send notification'
+        };
+      default:
+        return {
+          icon: AlertCircle,
+          text: status || 'Unknown',
+          className: 'bg-gray-100 text-gray-800',
+          description: 'Status unknown'
+        };
+    }
+  };
+
+  const config = getStatusConfig(status);
+  const Icon = config.icon;
+
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.className}`}
+      title={config.description}
+    >
+      <Icon className="w-3 h-3 mr-1" />
+      {config.text}
+    </span>
   );
 };
 
@@ -320,7 +375,10 @@ const ReminderApp = () => {
               className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">{reminder.title}</h3>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{reminder.title}</h3>
+                  <StatusBadge status={reminder.status} />
+                </div>
                 <div className="flex items-center space-x-2">
                   {(reminder.notification_type || reminder.notificationType) === 'email' ? (
                     <Mail className="w-5 h-5 text-blue-500" />
