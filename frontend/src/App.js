@@ -129,7 +129,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const ReminderApp = () => {
-  console.log('ReminderApp component is rendering!');
+  console.log('ReminderApp component is rendering! - MODIFIED');
   const [reminders, setReminders] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
