@@ -8,6 +8,7 @@ const API_BASE = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_UR
 const getDefaultEmails = () => {
   try {
     const stored = localStorage.getItem('memo-default-emails');
+    console.log('getDefaultEmails - stored value:', stored);
     return stored || '';
   } catch (error) {
     console.error('Error loading default emails:', error);
@@ -17,7 +18,9 @@ const getDefaultEmails = () => {
 
 const saveDefaultEmailsToStorage = (emails) => {
   try {
+    console.log('saveDefaultEmailsToStorage - saving:', emails);
     localStorage.setItem('memo-default-emails', emails);
+    console.log('saveDefaultEmailsToStorage - saved successfully');
   } catch (error) {
     console.error('Error saving default emails:', error);
   }
@@ -335,6 +338,7 @@ const ReminderApp = () => {
                 onClick={() => {
                   // Reset form with fresh default emails when opening modal
                   const currentDefaultEmails = getDefaultEmails();
+                  console.log('Opening modal - default emails from localStorage:', currentDefaultEmails);
                   setFormData({
                     title: '',
                     description: '',
