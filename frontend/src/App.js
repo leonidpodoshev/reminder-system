@@ -230,7 +230,18 @@ const ReminderApp = () => {
         return;
       }
 
-      resetForm();
+      // Reset form with fresh default emails after successful submission
+      const currentDefaultEmails = getDefaultEmails();
+      setFormData({
+        title: '',
+        description: '',
+        datetime: '',
+        notificationType: 'email',
+        email: currentDefaultEmails,
+        phone: ''
+      });
+      setEditingId(null);
+      setShowModal(false);
       fetchReminders();
     } catch (error) {
       console.error('Error saving reminder:', error);
@@ -266,15 +277,12 @@ const ReminderApp = () => {
   };
 
   const resetForm = () => {
-    // Always get fresh default emails from localStorage
-    const currentDefaultEmails = getDefaultEmails();
-    
     setFormData({
       title: '',
       description: '',
       datetime: '',
       notificationType: 'email',
-      email: currentDefaultEmails, // Auto-populate with fresh default emails
+      email: '',
       phone: ''
     });
     setEditingId(null);
@@ -324,7 +332,20 @@ const ReminderApp = () => {
                 <Settings className="w-5 h-5" />
               </button>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={() => {
+                  // Reset form with fresh default emails when opening modal
+                  const currentDefaultEmails = getDefaultEmails();
+                  setFormData({
+                    title: '',
+                    description: '',
+                    datetime: '',
+                    notificationType: 'email',
+                    email: currentDefaultEmails,
+                    phone: ''
+                  });
+                  setEditingId(null);
+                  setShowModal(true);
+                }}
                 className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 <Plus className="w-5 h-5" />
