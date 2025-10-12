@@ -8,7 +8,6 @@ const API_BASE = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_UR
 const getDefaultEmails = () => {
   try {
     const stored = localStorage.getItem('memo-default-emails');
-    console.log('getDefaultEmails - stored value:', stored);
     return stored || '';
   } catch (error) {
     console.error('Error loading default emails:', error);
@@ -18,9 +17,7 @@ const getDefaultEmails = () => {
 
 const saveDefaultEmailsToStorage = (emails) => {
   try {
-    console.log('saveDefaultEmailsToStorage - saving:', emails);
     localStorage.setItem('memo-default-emails', emails);
-    console.log('saveDefaultEmailsToStorage - saved successfully');
   } catch (error) {
     console.error('Error saving default emails:', error);
   }
@@ -129,7 +126,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const ReminderApp = () => {
-  console.log('ReminderApp component is rendering! - MODIFIED');
+  // Component rendering
   const [reminders, setReminders] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -293,8 +290,6 @@ const ReminderApp = () => {
   };
 
   const saveDefaultEmailsHandler = (emails) => {
-    console.log('saveDefaultEmailsHandler called with:', emails);
-    alert('Save button clicked! Emails: ' + emails); // Visible debug
     setDefaultEmails(emails); // Update state
     saveDefaultEmailsToStorage(emails); // Save to localStorage using the utility function
     setShowSettings(false);
@@ -340,8 +335,6 @@ const ReminderApp = () => {
                 onClick={() => {
                   // Reset form with fresh default emails when opening modal
                   const currentDefaultEmails = getDefaultEmails();
-                  console.log('Opening modal - default emails from localStorage:', currentDefaultEmails);
-                  alert('New Reminder clicked! Default emails: "' + currentDefaultEmails + '"'); // Visible debug
                   setFormData({
                     title: '',
                     description: '',
@@ -646,10 +639,11 @@ const ReminderApp = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => alert('TEST SAVE BUTTON CLICKED')}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  onClick={() => saveDefaultEmailsHandler(defaultEmails)}
+                  className="flex-1 flex items-center justify-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                 >
-                  TEST SAVE
+                  <Check className="w-5 h-5" />
+                  <span>Save</span>
                 </button>
               </div>
             </div>
