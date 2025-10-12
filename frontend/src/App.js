@@ -293,6 +293,13 @@ const ReminderApp = () => {
   };
 
   const saveDefaultEmailsHandler = (emails) => {
+    console.log('saveDefaultEmailsHandler called with:', emails);
+    setDefaultEmails(emails); // Update state
+    saveDefaultEmailsToStorage(emails); // Save to localStorage using the utility function
+    setShowSettings(false);
+  };
+
+  const saveDefaultEmailsHandler = (emails) => {
     setDefaultEmails(emails); // Update state
     saveDefaultEmailsToStorage(emails); // Save to localStorage using the utility function
     setShowSettings(false);
