@@ -266,12 +266,15 @@ const ReminderApp = () => {
   };
 
   const resetForm = () => {
+    // Always get fresh default emails from localStorage
+    const currentDefaultEmails = getDefaultEmails();
+    
     setFormData({
       title: '',
       description: '',
       datetime: '',
       notificationType: 'email',
-      email: defaultEmails, // Auto-populate with default emails from state
+      email: currentDefaultEmails, // Auto-populate with fresh default emails
       phone: ''
     });
     setEditingId(null);
