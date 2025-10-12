@@ -300,12 +300,6 @@ const ReminderApp = () => {
     setShowSettings(false);
   };
 
-  const saveDefaultEmailsHandler = (emails) => {
-    setDefaultEmails(emails); // Update state
-    saveDefaultEmailsToStorage(emails); // Save to localStorage using the utility function
-    setShowSettings(false);
-  };
-
   const filteredReminders = reminders.filter(r => {
     if (filter === 'all') return true;
     const notificationType = r.notification_type || r.notificationType;
