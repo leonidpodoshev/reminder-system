@@ -15,7 +15,7 @@ const getDefaultEmails = () => {
   }
 };
 
-const setDefaultEmails = (emails) => {
+const saveDefaultEmailsToStorage = (emails) => {
   try {
     localStorage.setItem('memo-default-emails', emails);
   } catch (error) {
@@ -132,7 +132,7 @@ const ReminderApp = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [filter, setFilter] = useState('all');
-  const [defaultEmails, setDefaultEmailsState] = useState(getDefaultEmails());
+  const [defaultEmails, setDefaultEmails] = useState(getDefaultEmails());
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -271,16 +271,16 @@ const ReminderApp = () => {
       description: '',
       datetime: '',
       notificationType: 'email',
-      email: defaultEmails, // Auto-populate with default emails
+      email: defaultEmails, // Auto-populate with default emails from state
       phone: ''
     });
     setEditingId(null);
     setShowModal(false);
   };
 
-  const saveDefaultEmails = (emails) => {
-    setDefaultEmails(emails);
-    setDefaultEmailsState(emails);
+  const saveDefaultEmailsHandler = (emails) => {
+    setDefaultEmails(emails); // Update state
+    saveDefaultEmailsToStorage(emails); // Save to localStorage using the utility function
     setShowSettings(false);
   };
 
@@ -592,7 +592,7 @@ const ReminderApp = () => {
                 </label>
                 <textarea
                   value={defaultEmails}
-                  onChange={(e) => setDefaultEmailsState(e.target.value)}
+                  onChange={(e) => setDefaultEmails(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   rows="3"
                   placeholder="user1@example.com, user2@example.com&#10;Or separate with semicolons: user3@example.com; user4@example.com"
@@ -615,7 +615,7 @@ const ReminderApp = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => saveDefaultEmails(defaultEmails)}
+                  onClick={() => saveDefaultEmailsHandler(defaultEmails)}
                   className="flex-1 flex items-center justify-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                 >
                   <Check className="w-5 h-5" />
