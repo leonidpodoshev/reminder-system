@@ -652,11 +652,10 @@ const ReminderApp = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => saveDefaultEmailsHandler(defaultEmails)}
-                  className="flex-1 flex items-center justify-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                  onClick={() => alert('TEST SAVE BUTTON CLICKED')}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
-                  <Check className="w-5 h-5" />
-                  <span>Save</span>
+                  TEST SAVE
                 </button>
               </div>
             </div>
