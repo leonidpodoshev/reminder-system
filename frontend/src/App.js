@@ -294,6 +294,7 @@ const ReminderApp = () => {
 
   const saveDefaultEmailsHandler = (emails) => {
     console.log('saveDefaultEmailsHandler called with:', emails);
+    alert('Save button clicked! Emails: ' + emails); // Visible debug
     setDefaultEmails(emails); // Update state
     saveDefaultEmailsToStorage(emails); // Save to localStorage using the utility function
     setShowSettings(false);
@@ -346,6 +347,7 @@ const ReminderApp = () => {
                   // Reset form with fresh default emails when opening modal
                   const currentDefaultEmails = getDefaultEmails();
                   console.log('Opening modal - default emails from localStorage:', currentDefaultEmails);
+                  alert('New Reminder clicked! Default emails: "' + currentDefaultEmails + '"'); // Visible debug
                   setFormData({
                     title: '',
                     description: '',
