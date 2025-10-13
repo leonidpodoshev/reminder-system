@@ -315,21 +315,23 @@ const ReminderApp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 touch-manipulation">
       <header className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 sm:px-6 lg:px-8">
+          {/* Mobile: Stack vertically, Desktop: Side by side */}
+          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div className="flex items-center space-x-3">
-              <Bell className="w-8 h-8 text-indigo-600" />
-              <h1 className="text-3xl font-bold text-gray-900">Reminder System</h1>
+              <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Reminder System</h1>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
                 title="Settings"
               >
                 <Settings className="w-5 h-5" />
+                <span className="ml-2 sm:hidden">Settings</span>
               </button>
               <button
                 onClick={() => {
@@ -346,10 +348,10 @@ const ReminderApp = () => {
                   setEditingId(null);
                   setShowModal(true);
                 }}
-                className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 <Plus className="w-5 h-5" />
-                <span>New Reminder</span>
+                <span className="ml-2">New Reminder</span>
               </button>
             </div>
           </div>
@@ -357,10 +359,11 @@ const ReminderApp = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex space-x-4">
+        {/* Mobile: Scrollable horizontal, Desktop: Normal flex */}
+        <div className="mb-6 flex space-x-3 overflow-x-auto pb-2 sm:overflow-x-visible sm:pb-0">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex-shrink-0 min-w-[44px] min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === 'all' 
                 ? 'bg-indigo-600 text-white' 
                 : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -370,7 +373,7 @@ const ReminderApp = () => {
           </button>
           <button
             onClick={() => setFilter('email')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex-shrink-0 flex items-center space-x-2 min-w-[44px] min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === 'email' 
                 ? 'bg-indigo-600 text-white' 
                 : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -381,7 +384,7 @@ const ReminderApp = () => {
           </button>
           <button
             onClick={() => setFilter('sms')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex-shrink-0 flex items-center space-x-2 min-w-[44px] min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === 'sms' 
                 ? 'bg-indigo-600 text-white' 
                 : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -392,7 +395,8 @@ const ReminderApp = () => {
           </button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Mobile: Single column, Tablet: 2 columns, Desktop: 3 columns */}
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {filteredReminders.map(reminder => (
             <div
               key={reminder.id}
@@ -444,14 +448,14 @@ const ReminderApp = () => {
               <div className="flex space-x-2 pt-4 border-t">
                 <button
                   onClick={() => editReminder(reminder)}
-                  className="flex-1 flex items-center justify-center space-x-2 bg-blue-50 text-blue-600 px-3 py-2 rounded hover:bg-blue-100 transition-colors"
+                  className="flex-1 flex items-center justify-center space-x-2 min-h-[44px] bg-blue-50 text-blue-600 px-3 py-2 rounded hover:bg-blue-100 transition-colors"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span>Edit</span>
                 </button>
                 <button
                   onClick={() => deleteReminder(reminder.id)}
-                  className="flex-1 flex items-center justify-center space-x-2 bg-red-50 text-red-600 px-3 py-2 rounded hover:bg-red-100 transition-colors"
+                  className="flex-1 flex items-center justify-center space-x-2 min-h-[44px] bg-red-50 text-red-600 px-3 py-2 rounded hover:bg-red-100 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Delete</span>
@@ -462,17 +466,17 @@ const ReminderApp = () => {
         </div>
 
         {filteredReminders.length === 0 && (
-          <div className="text-center py-12">
-            <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-gray-600 mb-2">No reminders yet</h3>
-            <p className="text-gray-500">Create your first reminder to get started!</p>
+          <div className="text-center py-12 px-4">
+            <Bell className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-medium text-gray-600 mb-2">No reminders yet</h3>
+            <p className="text-sm sm:text-base text-gray-500">Create your first reminder to get started!</p>
           </div>
         )}
       </main>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="bg-white rounded-t-lg sm:rounded-lg shadow-xl w-full sm:max-w-md sm:w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
                 {editingId ? 'Edit Reminder' : 'New Reminder'}
@@ -576,16 +580,16 @@ const ReminderApp = () => {
                 </div>
               )}
 
-              <div className="flex space-x-3 pt-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
                 <button
                   onClick={resetForm}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 min-h-[44px] px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 flex items-center justify-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="flex-1 flex items-center justify-center space-x-2 min-h-[44px] bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                 >
                   <Check className="w-5 h-5" />
                   <span>{editingId ? 'Update' : 'Create'}</span>
@@ -597,8 +601,8 @@ const ReminderApp = () => {
       )}
 
       {showSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="bg-white rounded-t-lg sm:rounded-lg shadow-xl w-full sm:max-w-md sm:w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
               <button
@@ -631,16 +635,16 @@ const ReminderApp = () => {
                 )}
               </div>
 
-              <div className="flex space-x-3 pt-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
                 <button
                   onClick={() => setShowSettings(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 min-h-[44px] px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => saveDefaultEmailsHandler(defaultEmails)}
-                  className="flex-1 flex items-center justify-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="flex-1 flex items-center justify-center space-x-2 min-h-[44px] bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                 >
                   <Check className="w-5 h-5" />
                   <span>Save</span>
