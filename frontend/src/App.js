@@ -177,24 +177,16 @@ const ReminderApp = () => {
         return;
       }
       
-      // Validate email addresses if email notification is selected
-      if (formData.notificationType === 'email') {
-        const emailList = parseEmails(formData.email);
-        if (emailList.length === 0) {
-          alert('Please enter at least one email address');
-          return;
-        }
-        
-        const invalidEmails = emailList.filter(email => !validateEmail(email));
-        if (invalidEmails.length > 0) {
-          alert(`Please fix these invalid email addresses:\n${invalidEmails.join('\n')}`);
-          return;
-        }
+      // Validate email addresses
+      const emailList = parseEmails(formData.email);
+      if (emailList.length === 0) {
+        alert('Please enter at least one email address');
+        return;
       }
       
-      // Validate phone number if SMS notification is selected
-      if (formData.notificationType === 'sms' && !formData.phone.trim()) {
-        alert('Please enter a phone number for SMS notifications');
+      const invalidEmails = emailList.filter(email => !validateEmail(email));
+      if (invalidEmails.length > 0) {
+        alert(`Please fix these invalid email addresses:\n${invalidEmails.join('\n')}`);
         return;
       }
       
@@ -209,9 +201,9 @@ const ReminderApp = () => {
         title: formData.title,
         description: formData.description,
         datetime: datetimeRFC3339,
-        notification_type: formData.notificationType, // Convert camelCase to snake_case
+        notification_type: 'email', // Always email since SMS is not supported
         email: formData.email, // Backend will handle parsing multiple emails
-        phone: formData.phone
+        phone: ''
       };
 
       const response = await fetch(url, {
@@ -268,9 +260,9 @@ const ReminderApp = () => {
       title: reminder.title,
       description: reminder.description,
       datetime: localDatetime,
-      notificationType: reminder.notification_type || reminder.notificationType,
+      notificationType: 'email', // Always email
       email: reminder.email || '',
-      phone: reminder.phone || ''
+      phone: ''
     });
     setEditingId(reminder.id);
     setShowModal(true);
@@ -295,13 +287,7 @@ const ReminderApp = () => {
     setShowSettings(false);
   };
 
-  const filteredReminders = reminders.filter(r => {
-    if (filter === 'all') return true;
-    const notificationType = r.notification_type || r.notificationType;
-    if (filter === 'email') return notificationType === 'email';
-    if (filter === 'sms') return notificationType === 'sms';
-    return true;
-  });
+  const filteredReminders = reminders; // Show all reminders since we only support email
 
   const formatDateTime = (datetime) => {
     const date = new Date(datetime);
@@ -317,83 +303,57 @@ const ReminderApp = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 touch-manipulation">
       <header className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 sm:px-6 lg:px-8">
-          {/* Mobile: Stack vertically, Desktop: Side by side */}
-          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-            <div className="flex items-center space-x-3">
-              <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Reminder System</h1>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-                title="Settings"
-              >
-                <Settings className="w-5 h-5" />
-                <span className="ml-2 sm:hidden">Settings</span>
-              </button>
-              <button
-                onClick={() => {
-                  // Reset form with fresh default emails when opening modal
-                  const currentDefaultEmails = getDefaultEmails();
-                  setFormData({
-                    title: '',
-                    description: '',
-                    datetime: '',
-                    notificationType: 'email',
-                    email: currentDefaultEmails,
-                    phone: ''
-                  });
-                  setEditingId(null);
-                  setShowModal(true);
-                }}
-                className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span className="ml-2">New Reminder</span>
-              </button>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between space-x-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`flex-shrink-0 min-w-[44px] min-h-[44px] px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
+                filter === 'all' 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span className="hidden sm:inline">All Reminders</span>
+              <span className="sm:hidden">All</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                // Reset form with fresh default emails when opening modal
+                const currentDefaultEmails = getDefaultEmails();
+                setFormData({
+                  title: '',
+                  description: '',
+                  datetime: '',
+                  notificationType: 'email',
+                  email: currentDefaultEmails,
+                  phone: ''
+                });
+                setEditingId(null);
+                setShowModal(true);
+              }}
+              className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">New Reminder</span>
+              <span className="sm:hidden">New</span>
+            </button>
+            
+            <button
+              onClick={() => setShowSettings(true)}
+              className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              title="Settings"
+            >
+              <Settings className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Settings</span>
+              <span className="sm:hidden">Settings</span>
+            </button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Mobile: Scrollable horizontal, Desktop: Normal flex */}
-        <div className="mb-6 flex space-x-3 overflow-x-auto pb-2 sm:overflow-x-visible sm:pb-0">
-          <button
-            onClick={() => setFilter('all')}
-            className={`flex-shrink-0 min-w-[44px] min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors ${
-              filter === 'all' 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            All Reminders
-          </button>
-          <button
-            onClick={() => setFilter('email')}
-            className={`flex-shrink-0 flex items-center space-x-2 min-w-[44px] min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors ${
-              filter === 'email' 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Mail className="w-4 h-4" />
-            <span>Email</span>
-          </button>
-          <button
-            onClick={() => setFilter('sms')}
-            className={`flex-shrink-0 flex items-center space-x-2 min-w-[44px] min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors ${
-              filter === 'sms' 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>SMS</span>
-          </button>
-        </div>
+
 
         {/* Mobile: Single column, Tablet: 2 columns, Desktop: 3 columns */}
         <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -408,11 +368,7 @@ const ReminderApp = () => {
                   <StatusBadge status={reminder.status} />
                 </div>
                 <div className="flex items-center space-x-2">
-                  {(reminder.notification_type || reminder.notificationType) === 'email' ? (
-                    <Mail className="w-5 h-5 text-blue-500" />
-                  ) : (
-                    <MessageSquare className="w-5 h-5 text-green-500" />
-                  )}
+                  <Mail className="w-5 h-5 text-blue-500" />
                 </div>
               </div>
               
@@ -439,11 +395,7 @@ const ReminderApp = () => {
                 </div>
               )}
               
-              {reminder.phone && (
-                <div className="text-sm text-gray-500 mb-4">
-                  To: {reminder.phone}
-                </div>
-              )}
+
 
               <div className="flex space-x-2 pt-4 border-t">
                 <button
@@ -523,6 +475,7 @@ const ReminderApp = () => {
                 <input
                   type="datetime-local"
                   value={formData.datetime}
+                  min={new Date().toISOString().slice(0, 16)}
                   onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
@@ -530,57 +483,26 @@ const ReminderApp = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notification Type
+                  Email Addresses
                 </label>
-                <select
-                  value={formData.notificationType}
-                  onChange={(e) => setFormData({ ...formData, notificationType: e.target.value })}
+                <textarea
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  <option value="email">Email</option>
-                  <option value="sms">SMS</option>
-                </select>
+                  rows="3"
+                  placeholder="user1@example.com, user2@example.com&#10;Or separate with semicolons: user3@example.com; user4@example.com"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Separate multiple email addresses with commas (,) or semicolons (;)
+                </p>
+                {formData.email && (
+                  <div className="mt-2">
+                    <EmailPreview emails={formData.email} />
+                  </div>
+                )}
               </div>
 
-              {formData.notificationType === 'email' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Addresses
-                  </label>
-                  <textarea
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    rows="3"
-                    placeholder="user1@example.com, user2@example.com&#10;Or separate with semicolons: user3@example.com; user4@example.com"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    💡 Separate multiple email addresses with commas (,) or semicolons (;)
-                  </p>
-                  {formData.email && (
-                    <div className="mt-2">
-                      <EmailPreview emails={formData.email} />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {formData.notificationType === 'sms' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="+1234567890"
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row space-y-3 space-y-reverse sm:space-y-0 sm:space-x-3 pt-4">
                 <button
                   onClick={resetForm}
                   className="flex-1 min-h-[44px] px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
