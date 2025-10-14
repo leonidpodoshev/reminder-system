@@ -272,8 +272,18 @@ const ReminderApp = () => {
   };
 
   const editReminder = (reminder) => {
-    // Convert ISO datetime back to datetime-local format for the input
-    const localDatetime = reminder.datetime ? new Date(reminder.datetime).toISOString().slice(0, 16) : '';
+    // Convert ISO datetime back to datetime-local format for the input (in local timezone)
+    let localDatetime = '';
+    if (reminder.datetime) {
+      const date = new Date(reminder.datetime);
+      // Format for datetime-local input (YYYY-MM-DDTHH:MM) in local timezone
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      localDatetime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
     
     setFormData({
       title: reminder.title,
