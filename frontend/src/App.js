@@ -177,6 +177,14 @@ const ReminderApp = () => {
         return;
       }
       
+      // Check if the selected time is in the past
+      const selectedTime = new Date(formData.datetime);
+      const now = new Date();
+      if (selectedTime <= now) {
+        alert('Please select a future date and time for your reminder');
+        return;
+      }
+      
       // Validate email addresses
       const emailList = parseEmails(formData.email);
       if (emailList.length === 0) {
@@ -475,7 +483,7 @@ const ReminderApp = () => {
                 <input
                   type="datetime-local"
                   value={formData.datetime}
-                  min={new Date().toISOString().slice(0, 16)}
+                  min={new Date().toISOString().slice(0, 10) + 'T00:00'}
                   onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
