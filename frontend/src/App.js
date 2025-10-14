@@ -232,10 +232,16 @@ const ReminderApp = () => {
 
       // Reset form with fresh default emails after successful submission
       const currentDefaultEmails = getDefaultEmails();
-      // Set default datetime to 1 hour from now
+      // Set default datetime to 1 hour from now (in local timezone)
       const defaultDateTime = new Date();
       defaultDateTime.setHours(defaultDateTime.getHours() + 1);
-      const defaultDateTimeString = defaultDateTime.toISOString().slice(0, 16);
+      // Format for datetime-local input (YYYY-MM-DDTHH:MM) in local timezone
+      const year = defaultDateTime.getFullYear();
+      const month = String(defaultDateTime.getMonth() + 1).padStart(2, '0');
+      const day = String(defaultDateTime.getDate()).padStart(2, '0');
+      const hours = String(defaultDateTime.getHours()).padStart(2, '0');
+      const minutes = String(defaultDateTime.getMinutes()).padStart(2, '0');
+      const defaultDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
       
       setFormData({
         title: '',
@@ -334,10 +340,16 @@ const ReminderApp = () => {
               onClick={() => {
                 // Reset form with fresh default emails when opening modal
                 const currentDefaultEmails = getDefaultEmails();
-                // Set default datetime to 1 hour from now
+                // Set default datetime to 1 hour from now (in local timezone)
                 const defaultDateTime = new Date();
                 defaultDateTime.setHours(defaultDateTime.getHours() + 1);
-                const defaultDateTimeString = defaultDateTime.toISOString().slice(0, 16);
+                // Format for datetime-local input (YYYY-MM-DDTHH:MM) in local timezone
+                const year = defaultDateTime.getFullYear();
+                const month = String(defaultDateTime.getMonth() + 1).padStart(2, '0');
+                const day = String(defaultDateTime.getDate()).padStart(2, '0');
+                const hours = String(defaultDateTime.getHours()).padStart(2, '0');
+                const minutes = String(defaultDateTime.getMinutes()).padStart(2, '0');
+                const defaultDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
                 
                 setFormData({
                   title: '',
@@ -493,7 +505,13 @@ const ReminderApp = () => {
                 <input
                   type="datetime-local"
                   value={formData.datetime}
-                  min={new Date().toISOString().slice(0, 10) + 'T00:00'}
+                  min={(() => {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}T00:00`;
+                  })()}
                   onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
