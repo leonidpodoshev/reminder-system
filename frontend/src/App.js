@@ -232,10 +232,15 @@ const ReminderApp = () => {
 
       // Reset form with fresh default emails after successful submission
       const currentDefaultEmails = getDefaultEmails();
+      // Set default datetime to 1 hour from now
+      const defaultDateTime = new Date();
+      defaultDateTime.setHours(defaultDateTime.getHours() + 1);
+      const defaultDateTimeString = defaultDateTime.toISOString().slice(0, 16);
+      
       setFormData({
         title: '',
         description: '',
-        datetime: '',
+        datetime: defaultDateTimeString,
         notificationType: 'email',
         email: currentDefaultEmails,
         phone: ''
@@ -329,10 +334,15 @@ const ReminderApp = () => {
               onClick={() => {
                 // Reset form with fresh default emails when opening modal
                 const currentDefaultEmails = getDefaultEmails();
+                // Set default datetime to 1 hour from now
+                const defaultDateTime = new Date();
+                defaultDateTime.setHours(defaultDateTime.getHours() + 1);
+                const defaultDateTimeString = defaultDateTime.toISOString().slice(0, 16);
+                
                 setFormData({
                   title: '',
                   description: '',
-                  datetime: '',
+                  datetime: defaultDateTimeString,
                   notificationType: 'email',
                   email: currentDefaultEmails,
                   phone: ''
