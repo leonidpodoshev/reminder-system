@@ -323,19 +323,7 @@ const ReminderApp = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 touch-manipulation">
       <header className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between space-x-2">
-            <button
-              onClick={() => setFilter('all')}
-              className={`flex-shrink-0 min-w-[44px] min-h-[44px] px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
-                filter === 'all' 
-                  ? 'bg-indigo-600 text-white' 
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <span className="hidden sm:inline">All Reminders</span>
-              <span className="sm:hidden">All</span>
-            </button>
-            
+          <div className="flex items-center justify-between">
             <button
               onClick={() => {
                 // Reset form with fresh default emails when opening modal
@@ -362,7 +350,7 @@ const ReminderApp = () => {
                 setEditingId(null);
                 setShowModal(true);
               }}
-              className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+              className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm"
             >
               <Plus className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">New Reminder</span>
@@ -371,7 +359,7 @@ const ReminderApp = () => {
             
             <button
               onClick={() => setShowSettings(true)}
-              className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              className="flex items-center justify-center min-w-[44px] min-h-[44px] bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
               title="Settings"
             >
               <Settings className="w-4 h-4 mr-1" />
