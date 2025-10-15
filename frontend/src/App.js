@@ -39,6 +39,20 @@ const validateEmail = (email) => {
   return emailRegex.test(email);
 };
 
+// Helper function to get smart default for early reminder
+const getSmartEarlyReminderDefault = (datetime) => {
+  if (!datetime) return '10'; // Default to 10 minutes
+  
+  const reminderTime = new Date(datetime);
+  const now = new Date();
+  const timeDiff = reminderTime - now;
+  const hoursDiff = timeDiff / (1000 * 60 * 60);
+  
+  // If more than 24 hours away, default to 1 day before
+  // Otherwise, default to 10 minutes before
+  return hoursDiff >= 24 ? '1440' : '10'; // 1440 minutes = 1 day
+};
+
 const EmailPreview = ({ emails }) => {
   const emailList = parseEmails(emails);
   
@@ -139,7 +153,9 @@ const ReminderApp = () => {
     datetime: '',
     notificationType: 'email',
     email: '',
-    phone: ''
+    phone: '',
+    enableEarlyReminder: false,
+    earlyReminderOffset: '10' // minutes by default
   });
 
   useEffect(() => {
@@ -198,36 +214,97 @@ const ReminderApp = () => {
         return;
       }
       
-      const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `${API_BASE}/reminders/${editingId}` : `${API_BASE}/reminders`;
-      
-      // Convert datetime-local format to RFC3339 format
-      const datetimeRFC3339 = new Date(formData.datetime).toISOString();
-      
-      // Transform formData to match backend expectations
-      const requestData = {
-        title: formData.title,
-        description: formData.description,
-        datetime: datetimeRFC3339,
-        notification_type: 'email', // Always email since SMS is not supported
-        email: formData.email, // Backend will handle parsing multiple emails
-        phone: ''
-      };
+      // For editing, we'll keep it simple and not support early reminders for now
+      if (editingId) {
+        const url = `${API_BASE}/reminders/${editingId}`;
+        const datetimeRFC3339 = new Date(formData.datetime).toISOString();
+        
+        const requestData = {
+          title: formData.title,
+          description: formData.description,
+          datetime: datetimeRFC3339,
+          notification_type: 'email',
+          email: formData.email,
+          phone: ''
+        };
 
-      const response = await fetch(url, {
-        method,
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-User-ID': 'default-user'
-        },
-        body: JSON.stringify(requestData)
-      });
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-ID': 'default-user'
+          },
+          body: JSON.stringify(requestData)
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API Error:', errorData);
-        alert(`Error: ${errorData.error || 'Failed to save reminder'}`);
-        return;
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('API Error:', errorData);
+          alert(`Error: ${errorData.error || 'Failed to update reminder'}`);
+          return;
+        }
+      } else {
+        // Creating new reminder(s)
+        const mainDatetime = new Date(formData.datetime);
+        const mainDatetimeRFC3339 = mainDatetime.toISOString();
+        
+        // Create main reminder
+        const mainRequestData = {
+          title: formData.title,
+          description: formData.description,
+          datetime: mainDatetimeRFC3339,
+          notification_type: 'email',
+          email: formData.email,
+          phone: ''
+        };
+
+        const mainResponse = await fetch(`${API_BASE}/reminders`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-ID': 'default-user'
+          },
+          body: JSON.stringify(mainRequestData)
+        });
+
+        if (!mainResponse.ok) {
+          const errorData = await mainResponse.json();
+          console.error('API Error:', errorData);
+          alert(`Error: ${errorData.error || 'Failed to create reminder'}`);
+          return;
+        }
+
+        // Create early reminder if enabled
+        if (formData.enableEarlyReminder) {
+          const offsetMinutes = parseInt(formData.earlyReminderOffset);
+          const earlyDatetime = new Date(mainDatetime.getTime() - (offsetMinutes * 60 * 1000));
+          const earlyDatetimeRFC3339 = earlyDatetime.toISOString();
+          
+          // Only create early reminder if it's in the future
+          if (earlyDatetime > new Date()) {
+            const earlyRequestData = {
+              title: `⏰ Early Reminder: ${formData.title}`,
+              description: `This is an early reminder for: ${formData.description}`,
+              datetime: earlyDatetimeRFC3339,
+              notification_type: 'email',
+              email: formData.email,
+              phone: ''
+            };
+
+            const earlyResponse = await fetch(`${API_BASE}/reminders`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'X-User-ID': 'default-user'
+              },
+              body: JSON.stringify(earlyRequestData)
+            });
+
+            if (!earlyResponse.ok) {
+              console.warn('Failed to create early reminder, but main reminder was created successfully');
+            }
+          }
+        }
       }
 
       // Reset form with fresh default emails after successful submission
@@ -243,13 +320,16 @@ const ReminderApp = () => {
       const minutes = String(defaultDateTime.getMinutes()).padStart(2, '0');
       const defaultDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
       
+      const smartDefault = getSmartEarlyReminderDefault(defaultDateTimeString);
       setFormData({
         title: '',
         description: '',
         datetime: defaultDateTimeString,
         notificationType: 'email',
         email: currentDefaultEmails,
-        phone: ''
+        phone: '',
+        enableEarlyReminder: false,
+        earlyReminderOffset: smartDefault
       });
       setEditingId(null);
       setShowModal(false);
@@ -285,13 +365,16 @@ const ReminderApp = () => {
       localDatetime = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
     
+    const smartDefault = getSmartEarlyReminderDefault(localDatetime);
     setFormData({
       title: reminder.title,
       description: reminder.description,
       datetime: localDatetime,
       notificationType: 'email', // Always email
       email: reminder.email || '',
-      phone: ''
+      phone: '',
+      enableEarlyReminder: false, // Default to false for existing reminders
+      earlyReminderOffset: smartDefault
     });
     setEditingId(reminder.id);
     setShowModal(true);
@@ -304,7 +387,9 @@ const ReminderApp = () => {
       datetime: '',
       notificationType: 'email',
       email: '',
-      phone: ''
+      phone: '',
+      enableEarlyReminder: false,
+      earlyReminderOffset: '10'
     });
     setEditingId(null);
     setShowModal(false);
@@ -349,13 +434,16 @@ const ReminderApp = () => {
                 const minutes = String(defaultDateTime.getMinutes()).padStart(2, '0');
                 const defaultDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
                 
+                const smartDefault = getSmartEarlyReminderDefault(defaultDateTimeString);
                 setFormData({
                   title: '',
                   description: '',
                   datetime: defaultDateTimeString,
                   notificationType: 'email',
                   email: currentDefaultEmails,
-                  phone: ''
+                  phone: '',
+                  enableEarlyReminder: false,
+                  earlyReminderOffset: smartDefault
                 });
                 setEditingId(null);
                 setShowModal(true);
@@ -510,9 +598,48 @@ const ReminderApp = () => {
                     const day = String(today.getDate()).padStart(2, '0');
                     return `${year}-${month}-${day}T00:00`;
                   })()}
-                  onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
+                  onChange={(e) => {
+                    const newDatetime = e.target.value;
+                    const smartDefault = getSmartEarlyReminderDefault(newDatetime);
+                    setFormData({ 
+                      ...formData, 
+                      datetime: newDatetime,
+                      earlyReminderOffset: smartDefault
+                    });
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
+              </div>
+
+              <div>
+                <div className="flex items-center space-x-3 mb-2">
+                  <input
+                    type="checkbox"
+                    id="enableEarlyReminder"
+                    checked={formData.enableEarlyReminder}
+                    onChange={(e) => setFormData({ ...formData, enableEarlyReminder: e.target.checked })}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <label htmlFor="enableEarlyReminder" className="text-sm font-medium text-gray-700">
+                    Send reminder before main reminder
+                  </label>
+                </div>
+                {formData.enableEarlyReminder && (
+                  <select
+                    value={formData.earlyReminderOffset}
+                    onChange={(e) => setFormData({ ...formData, earlyReminderOffset: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value="5">5 minutes before</option>
+                    <option value="10">10 minutes before</option>
+                    <option value="15">15 minutes before</option>
+                    <option value="30">30 minutes before</option>
+                    <option value="60">1 hour before</option>
+                    <option value="120">2 hours before</option>
+                    <option value="1440">1 day before</option>
+                    <option value="2880">2 days before</option>
+                  </select>
+                )}
               </div>
 
               <div>
