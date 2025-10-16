@@ -386,6 +386,14 @@ func generateEmailBody(req NotificationRequest) (string, error) {
 		return "", err
 	}
 
+	// Convert UTC time to Eastern Time (EST/EDT)
+	easternTZ, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		log.Printf("Error loading Eastern timezone, using UTC: %v", err)
+		easternTZ = time.UTC
+	}
+	localTime := req.DateTime.In(easternTZ)
+
 	data := struct {
 		Title             string
 		Description       string
@@ -393,7 +401,7 @@ func generateEmailBody(req NotificationRequest) (string, error) {
 	}{
 		Title:             req.Title,
 		Description:       req.Description,
-		DateTimeFormatted: req.DateTime.Format("Monday, January 2, 2006 at 3:04 PM"),
+		DateTimeFormatted: localTime.Format("Monday, January 2, 2006 at 3:04 PM MST"),
 	}
 
 	var buf bytes.Buffer
