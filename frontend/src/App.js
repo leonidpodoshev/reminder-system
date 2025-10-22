@@ -214,10 +214,11 @@ const ReminderApp = () => {
         return;
       }
       
-      // For editing, we'll keep it simple and not support early reminders for now
+      // Handle editing existing reminder
       if (editingId) {
         const url = `${API_BASE}/reminders/${editingId}`;
-        const datetimeRFC3339 = new Date(formData.datetime).toISOString();
+        const mainDatetime = new Date(formData.datetime);
+        const datetimeRFC3339 = mainDatetime.toISOString();
         
         const requestData = {
           title: formData.title,
@@ -242,6 +243,38 @@ const ReminderApp = () => {
           console.error('API Error:', errorData);
           alert(`Error: ${errorData.error || 'Failed to update reminder'}`);
           return;
+        }
+
+        // Create additional early reminder if enabled
+        if (formData.enableEarlyReminder) {
+          const offsetMinutes = parseInt(formData.earlyReminderOffset);
+          const earlyDatetime = new Date(mainDatetime.getTime() - (offsetMinutes * 60 * 1000));
+          const earlyDatetimeRFC3339 = earlyDatetime.toISOString();
+          
+          // Only create early reminder if it's in the future
+          if (earlyDatetime > new Date()) {
+            const earlyRequestData = {
+              title: `⏰ Early Reminder: ${formData.title}`,
+              description: `This is an early reminder for: ${formData.description}`,
+              datetime: earlyDatetimeRFC3339,
+              notification_type: 'email',
+              email: formData.email,
+              phone: ''
+            };
+
+            const earlyResponse = await fetch(`${API_BASE}/reminders`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'X-User-ID': 'default-user'
+              },
+              body: JSON.stringify(earlyRequestData)
+            });
+
+            if (!earlyResponse.ok) {
+              console.warn('Failed to create early reminder, but main reminder was updated successfully');
+            }
+          }
         }
       } else {
         // Creating new reminder(s)
